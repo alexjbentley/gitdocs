@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+usage() {
+    echo 'git diff target requried!'
+}
+
+if [[ $# -lt 1 ]]; then
+    usage
+fi
+
+DIFF_TARGET=${1}
+
+DIFF_DATA=$(git diff "${DIFF_TARGET}" | grep -E "(^@@.*@@$)|(^diff --git )")
+readarray -t DIFF_ARRAY <<< "${DIFF_DATA}"
+# echo "${DIFF_ARRAY[@]}"
+
+# Store the filename, read all the diffs, read another filename, and so on.
+for ENTRY in "${DIFF_ARRAY[@]}"; do
+    FILENAME=$(IFS='$" "' awk ' $2 == "--git" { print $3 }' <<< "${ENTRY}")
+    if [[ "${FILENAME}" ]]; then
+        FILENAME=$(awk '{ print $2 }' <<< "${FILENAME}")
+        echo "${FILENAME}"
+    fi
+done
